@@ -407,7 +407,7 @@ void PhysicsScene::wakeUp(SceneEntity *entity) {
 PhysicsSceneEntity *PhysicsScene::trackPhysicsChild(SceneEntity *newEntity, int type, Number mass, Number friction, Number restitution, int group, bool compoundChildren) {
 	PhysicsSceneEntity *newPhysicsEntity = new PhysicsSceneEntity(newEntity, type, mass, friction,restitution, compoundChildren);
 	physicsWorld->addRigidBody(newPhysicsEntity->rigidBody, group,  btBroadphaseProxy::AllFilter); //btBroadphaseProxy::StaticFilter|btBroadphaseProxy::DefaultFilter);	
-//	world->addCollisionObject(newPhysicsEntity->collisionObject, group);	
+	world->addCollisionObject(newPhysicsEntity->collisionObject, group);	
 	//newPhysicsEntity->rigidBody->setActivationState(ISLAND_SLEEPING);	
 	physicsChildren.push_back(newPhysicsEntity);
 	collisionChildren.push_back(newPhysicsEntity);	
