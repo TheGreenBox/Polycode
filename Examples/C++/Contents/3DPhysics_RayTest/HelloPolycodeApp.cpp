@@ -49,7 +49,12 @@ void HelloPolycodeApp::handleEvent(Event *e) {
 		InputEvent *inputEvent = (InputEvent*)e;
 		switch(e->getEventCode()) {
 			case InputEvent::EVENT_MOUSEDOWN:
-				Vector3 dir = CoreServices::getInstance()->getRenderer()->projectRayFrom2DCoordinate(inputEvent->mousePosition.x, inputEvent->mousePosition.y);
+				Vector3 dir = 
+                CoreServices::getInstance()->getRenderer()->projectRayFrom2DCoordinate( 
+                                                    inputEvent->mousePosition.x, 
+                                                    inputEvent->mousePosition.y,
+                                                    CoreServices::getInstance()->getRenderer()->getCameraMatrix(),
+                                                    scene->getDefaultCamera()->getProjectionMatrix() );
 				RayTestResult res = scene->getFirstEntityInRay(scene->getDefaultCamera()->getPosition(), dir * 1000);				
 
 				if(lastEntity) {
