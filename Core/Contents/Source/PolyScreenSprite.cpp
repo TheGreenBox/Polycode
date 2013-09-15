@@ -30,6 +30,23 @@
 using std::vector;
 using namespace Polycode;
 
+ScreenSpriteResourceEntry::ScreenSpriteResourceEntry(ScreenSprite *sprite)  : Resource(Resource::RESOURCE_SCREEN_ENTITY_INSTANCE) {
+	this->sprite = sprite;
+}
+
+ScreenSpriteResourceEntry::~ScreenSpriteResourceEntry() {
+
+}
+
+ScreenSprite *ScreenSpriteResourceEntry::getSprite() {
+	return sprite;
+}
+
+void ScreenSpriteResourceEntry::reloadResource() {
+	sprite->reloadSprite();
+	Resource::reloadResource();
+}
+
 ScreenSprite* ScreenSprite::ScreenSpriteFromImageFile(const String& fileName, Number spriteWidth, Number spriteHeight) {
 	return new ScreenSprite(fileName, spriteWidth, spriteHeight);
 }
@@ -40,7 +57,10 @@ ScreenSprite::ScreenSprite(const String& fileName) : ScreenShape(ScreenShape::SH
 	currentAnimation = NULL;	
 	paused = false;
 
+	resourceEntry = new ScreenSpriteResourceEntry(this);		
 	loadFromFile(fileName);
+	resourceEntry->setResourceName(fileName);
+	resourceEntry->setResourcePath(fileName);	
 }
 
 Entity *ScreenSprite::Clone(bool deepClone, bool ignoreEditorOnly) const {
@@ -123,6 +143,27 @@ SpriteAnimation *ScreenSprite::getAnimationAtIndex(unsigned int index) {
 	}
 }
 
+void ScreenSprite::reloadSprite() {
+	
+	String _animName = "";
+	int _currentFrame;
+	bool _playingOnce;
+	
+	if(currentAnimation) {
+		_animName = currentAnimation->name;
+		_currentFrame = currentFrame;
+		_playingOnce = playingOnce;
+	}
+	loadFromFile(fileName);
+	
+	if(_animName != "") {
+		playAnimation(_animName, _currentFrame, _playingOnce);
+	}
+}
+
+ScreenSpriteResourceEntry *ScreenSprite::getResourceEntry() {
+	return resourceEntry;
+}
 
 ScreenSprite::ScreenSprite(const String& fileName, Number spriteWidth, Number spriteHeight) : ScreenShape(ScreenShape::SHAPE_RECT, spriteWidth, spriteHeight) {
 	this->spriteWidth = spriteWidth;
@@ -200,15 +241,47 @@ void SpriteAnimation::setOffsetsFromFrameString(const String& frames) {
 	int frameX;
 	int frameY;
 	
+	numFrames = 0;
+	
 	for(int i=0; i < frameNumbers.size(); i++) {
-		frameNumber = atoi(frameNumbers[i].c_str());
-		frameX = frameNumber % numFramesX;
-		frameY = frameNumber/numFramesX;
-		framesOffsets.push_back(Vector2(spriteUVWidth * frameX, spriteUVHeight * frameY));		
+		if(frameNumbers[i].find_first_of("-") != -1) {
+			vector<String> _frameNumbers = frameNumbers[i].split("-");
+			if(_frameNumbers.size() > 1) {
+				int frameNumberStart = atoi(_frameNumbers[0].c_str());
+				int frameNumberEnd = atoi(_frameNumbers[1].c_str());
+				int dir = 1;
+				if(frameNumberEnd < frameNumberStart) {
+					dir = -1;
+				}				
+				for(int j=frameNumberStart; j != frameNumberEnd + dir; j += dir) {
+					frameX = j % numFramesX;
+					frameY = j/numFramesX;
+					framesOffsets.push_back(Vector2(spriteUVWidth * frameX, spriteUVHeight * frameY));
+					numFrames++;
+				}
+			}
+		} else if(frameNumbers[i].find_first_of("x") != -1) {
+			vector<String> _frameNumbers = frameNumbers[i].split("x");
+			if(_frameNumbers.size() > 1) {
+				int _frameNumber = atoi(_frameNumbers[0].c_str());
+				int frameNumberCount = atoi(_frameNumbers[1].c_str());				
+				for(int j=0; j < frameNumberCount; j++) {
+					frameX = _frameNumber % numFramesX;
+					frameY = _frameNumber/numFramesX;
+					framesOffsets.push_back(Vector2(spriteUVWidth * frameX, spriteUVHeight * frameY));
+					numFrames++;					
+				}
+			}				
+		} else {	
+			frameNumber = atoi(frameNumbers[i].c_str());
+			frameX = frameNumber % numFramesX;
+			frameY = frameNumber/numFramesX;
+			framesOffsets.push_back(Vector2(spriteUVWidth * frameX, spriteUVHeight * frameY));
+			numFrames++;			
+		}
 	}
 	
 	this->frames = frames;
-	numFrames = frameNumbers.size();
 
 }
 

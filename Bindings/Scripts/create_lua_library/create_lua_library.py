@@ -111,7 +111,7 @@ def createLUABindings(inputPath, prefix, mainInclude, libSmallName, libName, api
 		if inputPathIsDir:
 			fileName = "%s/%s" % (inputPath, fileName)
 		head, tail = os.path.split(fileName)
-		ignore = ["PolyGLSLProgram", "PolyGLSLShader", "PolyGLSLShaderModule", "PolyWinCore", "PolyCocoaCore", "PolyAGLCore", "PolySDLCore", "Poly_iPhone", "PolyGLES1Renderer", "PolyGLRenderer", "tinyxml", "tinystr", "OpenGLCubemap", "PolyiPhoneCore", "PolyGLES1Texture", "PolyGLTexture", "PolyGLVertexBuffer", "PolyThreaded", "PolyGLHeaders", "GLee", "PolyPeer", "PolySocket", "PolyClient", "PolyServer", "PolyServerWorld", "OSFILE", "OSFileEntry", "OSBasics", "PolyLogger"]
+		ignore = ["PolyTween", "PolyTweenManager", "PolyGLSLProgram", "PolyGLSLShader", "PolyGLSLShaderModule", "PolyWinCore", "PolyCocoaCore", "PolyAGLCore", "PolySDLCore", "Poly_iPhone", "PolyGLES1Renderer", "PolyGLRenderer", "tinyxml", "tinystr", "OpenGLCubemap", "PolyiPhoneCore", "PolyGLES1Texture", "PolyGLTexture", "PolyGLVertexBuffer", "PolyThreaded", "PolyGLHeaders", "GLee", "PolyPeer", "PolySocket", "PolyClient", "PolyServer", "PolyServerWorld", "OSFILE", "OSFileEntry", "OSBasics", "PolyLogger"]
 		if tail.split(".")[1] == "h" and tail.split(".")[0] not in ignore:
 			filteredFiles.append(fileName)
 			wrappersHeaderOut += "#include \"%s\"\n" % (tail)
@@ -208,6 +208,9 @@ def createLUABindings(inputPath, prefix, mainInclude, libSmallName, libName, api
 				if 'doxygen' in c:
 					luaDocOut += "\t\t<desc><![CDATA[%s]]></desc>\n" % (cleanDocs(c['doxygen']))
 
+				if ckey in disable_gc:
+					luaDocOut += "\t\t<class_notes>NOTE: %s instances are not automatically garbage collected.</class_notes>\n" % (ckey)
+				
 				parsed_methods = [] # Def: List of discovered methods
 				ignore_methods = ["readByte32", "readByte16", "getCustomEntitiesByType", "Core", "Renderer", "Shader", "Texture", "handleEvent", "secondaryHandler", "getSTLString", "readInt"]
 				luaClassBindingOut += "\n\n"

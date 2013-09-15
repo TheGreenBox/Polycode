@@ -153,7 +153,7 @@ namespace Polycode {
 		void enableScissor(bool val);
 		void setScissorBox(Polycode::Rectangle box);		
 		
-		Vector3 projectRayFrom2DCoordinate(Number x, Number y);
+		Vector3 projectRayFrom2DCoordinate(Number x, Number y, Matrix4 cameraMatrix, Matrix4 projectionMatrix);
 		
 		void setLineSize(Number lineSize);
 		
@@ -172,7 +172,7 @@ namespace Polycode {
 		Matrix4 getProjectionMatrix();
 		Matrix4 getModelviewMatrix();		
 		void setModelviewMatrix(Matrix4 m);	
-		void multModelviewMatrix(Matrix4 m);
+		void multModelviewMatrix(Matrix4 m);		
 		
 		void enableDepthTest(bool val);
 		void enableDepthWrite(bool val);

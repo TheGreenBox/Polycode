@@ -88,6 +88,8 @@ UIVScrollBar::UIVScrollBar(Number width, Number height, Number initialRatio) : U
 	this->height = height;
 	this->width = width;	
 	
+	tickSize = 0.01;
+	
 	setHitbox(width, height);
 }
 
@@ -122,7 +124,12 @@ void UIVScrollBar::scrollTo(Number scrollValue) {
 }
 
 void UIVScrollBar::Scroll(Number amount) {
-	handleBox->setPositionY(((scrollValue+amount) * dragRectHeight) + padding);	
+	Number newValue = scrollValue+amount;
+	if(newValue > 1.0)
+		newValue = 1.0;
+	if(newValue < 0.0)
+		newValue = 0.0;		
+	handleBox->setPositionY(((newValue) * dragRectHeight) + padding);	
 }
 
 void UIVScrollBar::setHandleRatio(Number newRatio) {
@@ -149,22 +156,16 @@ void UIVScrollBar::onMouseWheelDown(Number x, Number y) {
 	scrollDownOneTick();
 }
 
+void UIVScrollBar::setTickSize(Number newTickSize) {
+	tickSize = newTickSize;
+}
+
 void UIVScrollBar::scrollUpOneTick() {
-	Number newPos = handleBox->getPosition().y - 5;
-	
-	if(newPos < padding)
-		newPos = padding;
-	
-	handleBox->setPositionY(newPos);	
+	Scroll(-tickSize);
 }
 
 void UIVScrollBar::scrollDownOneTick() {
-	Number newPos = handleBox->getPosition().y + 5;	
-	
-	if(newPos > dragRectHeight)
-		newPos = dragRectHeight;
-	
-	handleBox->setPositionY(newPos);	
+	Scroll(tickSize);
 }
 
 

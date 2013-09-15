@@ -29,6 +29,7 @@
 #include "PolyScreenEntity.h"
 #include "PolyUIEvent.h"
 #include "PolyUIBox.h"
+#include "PolyUIMenu.h"
 #include "PolyUIElement.h"
 #include "PolyTimer.h"
 #include "PolyCoreInput.h"
@@ -39,6 +40,7 @@
 using namespace std;
 
 #define MAX_TEXTINPUT_UNDO_STATES 30
+#define UI_TEXT_INPUT_SCROLL_SPEED 70.0
 
 namespace Polycode {
 
@@ -54,32 +56,44 @@ namespace Polycode {
 	
 	class _PolyExport SyntaxHighlightToken {
 		public:
-			SyntaxHighlightToken(String text, int type) { this->text = text; this->type = type; }
+			SyntaxHighlightToken() {
+				overrideType = TOKEN_TYPE_NO_OVERRIDE;
+			}
+			
+			SyntaxHighlightToken(String text, int type) { this->text = text; this->type = type; overrideType = TOKEN_TYPE_NO_OVERRIDE; }
 			Color color;
 			String text;
+			int overrideType;
 			unsigned int type;
+			
+			static const int TOKEN_TYPE_NO_OVERRIDE = 0;
+			static const int TOKEN_TYPE_OVERRIDE_START = 1;
+			static const int TOKEN_TYPE_OVERRIDE_END = 2;
+			static const int TOKEN_TYPE_OVERRIDE_LINE = 3;						
 	};
-	
+
 	class _PolyExport LineColorData {
 		public:
+			LineColorData() {}
 			LineColorData(Color color, unsigned int rangeStart, unsigned int rangeEnd) {
 				this->color = color;
 				this->rangeStart = rangeStart;
 				this->rangeEnd = rangeEnd;
 			}
 			Color color;
-			unsigned int rangeStart;
-			unsigned int rangeEnd;
+			int rangeStart;
+			int rangeEnd;
 	};
 	
 	class _PolyExport LineColorInfo {
 		public:
-			std::vector<LineColorData> colors;			
+			std::vector<LineColorData> colors;
+			LineColorInfo getColorInfoForRange(int start, int length);
 	};
-	
+		
 	class _PolyExport UITextInputSyntaxHighlighter {
 		public:		
-			virtual std::vector<SyntaxHighlightToken> parseText(String text) = 0;
+			virtual std::vector<SyntaxHighlightToken> parseText(String text, SyntaxHighlightToken overrideToken) = 0;
 	};
 
 	class _PolyExport FindMatch {
@@ -87,6 +101,37 @@ namespace Polycode {
 			unsigned int lineNumber;
 			unsigned int caretStart;
 			unsigned int caretEnd;							
+	};
+	
+	class WordWrapLine {
+		public:
+			WordWrapLine() {
+				lastBufferIndex = -1;
+				dirty = true;
+			}
+			String text;
+			bool isWordWrap;
+			int actualLineNumber;
+			int lineStart;
+			int lastBufferIndex;
+			LineColorInfo colorInfo;
+			bool dirty;
+			SyntaxHighlightToken blockOverrideToken;			
+	};
+	
+	class TextColorPair {
+		public:
+			LineColorInfo colorInfo;
+			String text;
+	};
+
+	class LineInfo {
+		public:
+			LineInfo(){ wordWrapLineIndex = -1; }
+			String text;
+			int wordWrapLineIndex;
+			LineColorInfo colorInfo;			
+			SyntaxHighlightToken blockOverrideToken;
 	};
 
 	/**
@@ -137,11 +182,8 @@ namespace Polycode {
 			 *
 			 * @param after Unused. This must be true.
 			 */
-			int insertLine(bool after = true);
+			int insertLine(String lineText = "");
 
-			void changedText(bool sendChangeEvent = true);
-			void applySyntaxFormatting();
-			
 			void onKeyDown(PolyKEY key, wchar_t charCode);
 		
 			/**
@@ -150,7 +192,7 @@ namespace Polycode {
 			void clearSelection();
 
 			/**
-			 * Set the current selection.
+			 * Set the currentselection.
 			 *
 			 * If (lineStart, colStart) is further "right" or "down" than (lineEnd, colEnd),
 			 * the two will automatically be swapped. It's thus enough to specify the two "edges"
@@ -253,6 +295,8 @@ namespace Polycode {
 			 */
 			void findString(String stringToFind, bool replace=false, String replaceString="");
 
+			std::vector<FindMatch> getFindMatches(String stringToFind);
+
 			/**
 			 * Set the current find result to the next one in the result list and select it
 			 * in the text field.
@@ -279,7 +323,6 @@ namespace Polycode {
 			 */
 			void setSyntaxHighlighter(UITextInputSyntaxHighlighter *syntaxHighlighter);
 					
-			bool isNumberOrCharacter(wchar_t charCode);
 			void Resize(Number width, Number height);
 			
 			/**
@@ -307,7 +350,7 @@ namespace Polycode {
 			 *
 			 * @param text The string to insert.
 			 */
-			void insertText(String text);
+			void insertText(String text, bool updateWordWrap = true);
 			
 			void setCaretPosition(int position);
 			
@@ -318,16 +361,26 @@ namespace Polycode {
             void shiftText(bool left=false);
             void convertIndentToTabs();
             void convertIndentToSpaces();
-		
+			
+			void doMultilineResize();
+						
+			static void setMenuSingleton(UIGlobalMenu *_globalMenu);
+					
 		protected:
 		
-			void readjustBuffer();
+			static UIGlobalMenu *globalMenuSingleton;
+		
+			void showCurrentLineIfOffscreen();
+		
+			void readjustBuffer(int lineStart=0, int lineEnd=-1);
+			void updateWordWrap(int lineStart, int lineEnd);
+			
+			Number resizeTimer;
 
-			std::vector<LineColorInfo> lineColors;
-					
 			ScreenEntity *lineNumberAnchor;
 		
 			void renumberLines();
+			bool isNumberOrCharacter(wchar_t charCode);			
 		
 			bool lineNumbersEnabled;
 		
@@ -336,28 +389,48 @@ namespace Polycode {
 				
 			void setUndoState(UITextInputUndoState state);
 			void saveUndoState();
+			
+			void setTextDiff(String text);
 		
 			bool isNumberOnly;
-		
+			
+			void changedText(int lineStart, int lineEnd, bool sendChangeEvent = true);
+			void applySyntaxFormatting(int startLine, int end);
+			
+			void applyTokenOverride(int lineIndex, SyntaxHighlightToken overrideToken);
+			
+			void setActualToCaret();
+			void setOffsetToActual();
+			
+			void convertOffsetToActual(int lineOffset, int caretPosition, int *actualCaretPosition);
+			
+			void convertActualToOffset(int actualLineOffset, int actualCaretPosition, int *lineOffset, int *caretPosition);
+					
 			int caretSkipWordBack(int caretLine, int caretPosition);
 			int caretSkipWordForward(int caretLine, int caretPosition);
 		
-			void selectLineFromOffset();
+			int lineOffsetToActualLineOffset(int lineOffset);
+			void setActualLineOffset();
 			void updateCaretPosition();
 			void setCaretToMouse(Number x, Number y);
-			void dragSelectionTo(Number x, Number y);		
+			void dragSelectionTo(Number x, Number y);
+			
+			void applyBlockOverrides();
+			
+			void updateSelectionRects();
 		
 			void selectWordAtCaret();
 		
 			void restructLines();
 			void removeLines(unsigned int startIndex, unsigned int endIndex);
-		
+			
+			std::vector<TextColorPair> makeWordWrapBuffer(LineInfo *lineInfo, String indentPrefix);
+			std::vector<TextColorPair> splitTokens(String stringToSplit, LineColorInfo *stringColorInfo);
+			
 			ScreenShape *selectorRectTop;
 			ScreenShape *selectorRectMiddle;
 			ScreenShape *selectorRectBottom;		
-			int numLines;
-			
-			bool needFullRedraw;
+			int numLines;			
 			
 			Number padding;
 			Number lineSpacing;
@@ -391,6 +464,8 @@ namespace Polycode {
 			Number caretX,caretY;
 		
 			int caretPosition;
+			int actualCaretPosition;
+			
 			bool doSelectToCaret;
 			
 			UITextInputSyntaxHighlighter *syntaxHighliter;
@@ -414,16 +489,24 @@ namespace Polycode {
 			Timer *blinkTimer;
 			UIBox *inputRect;
 			ScreenShape *blinkerRect;
+			Vector2 dragMouseStart;
+			
+			Color selectionColor;
+			void _setSelectionColor(Color color);
 			
 			Number st;
 			Number sr;
 			Number sb;
 			Number sl;
+			
+			UIMenu *contextMenu;
+			
+			Vector2 selectionDragMouse;
 		
 			Number caretImagePosition;
 			
 			int currentBufferLines;
-			int neededBufferLines;
+			int neededBufferLines;			
 			
 			UIScrollContainer *scrollContainer;
 		
@@ -433,13 +516,21 @@ namespace Polycode {
 			Number lineHeight;
 		
 			int lineOffset;
+			int actualLineOffset;
 			
-			vector<String> lines;
-						
+			vector<LineInfo> lines;
+			vector<WordWrapLine> wordWrapLines;
+									
 			vector<ScreenLabel*> bufferLines;
 			vector<ScreenLabel*> numberLines;
 			
 			Core *core;
+			
+			Number lastResizeWidth;
+			
+			Number _newWidth;
+			Number _newHeight;
+			bool didMultilineResize;
         
 			enum indentTypes { INDENT_SPACE, INDENT_TAB } indentType;
 			int indentSpacing;

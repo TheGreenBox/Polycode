@@ -31,7 +31,7 @@ PolycodeClipboard *globalClipboard;
 
 
 PolycodeIDEApp::PolycodeIDEApp(PolycodeView *view) : EventDispatcher() {
-	core = new POLYCODE_CORE(view, 1100, 700,false,true, 0, 0,30, -1);	
+	core = new POLYCODE_CORE(view, 1100, 700,false,true, 0, 0,90, -1);	
 //	core->pauseOnLoseFocus = true;
 	
 	CoreServices::getInstance()->getResourceManager()->reloadResourcesOnModify = true;
@@ -72,7 +72,8 @@ PolycodeIDEApp::PolycodeIDEApp(PolycodeView *view) : EventDispatcher() {
 	willRunProject = false;
 
 	globalMenu	= new UIGlobalMenu();
-		
+	UITextInput::setMenuSingleton(globalMenu);
+			
 	printf("creating font editor\n"); 
 	
 	Screen *screen = new Screen();	
@@ -161,10 +162,11 @@ PolycodeIDEApp::PolycodeIDEApp(PolycodeView *view) : EventDispatcher() {
 	editEntry->addItem("Redo", "redo");
 	editEntry->addItem("Cut", "cut");
 	editEntry->addItem("Copy", "copy");
+	editEntry->addItem("Find", "find", KEY_f);
 	editEntry->addItem("Settings", "settings");
 
 	UIMenuBarEntry *viewEntry = menuBar->addMenuBarEntry("View");
-	viewEntry->addItem("Toggle Console", "toggle_console", KEY_LSHIFT, KEY_c);
+	viewEntry->addItem("Toggle Console", "toggle_console", KEY_LSHIFT, KEY_t);
 
 	UIMenuBarEntry *projectEntry = menuBar->addMenuBarEntry("Project");
 	projectEntry->addItem("Run Project", "run_project", KEY_r);
@@ -221,7 +223,7 @@ void PolycodeIDEApp::doRemoveFile() {
 		if(projectManager->getActiveProject()) {
 			frame->projectBrowser->refreshProject(projectManager->getActiveProject());
 		}
-		PolycodeEditor *editor;
+		PolycodeEditor *editor = 0;
 		for (int i=0; i < editorManager->openEditors.size(); i++) {
 			if (editorManager->openEditors[i]->getFilePath() == projectManager->selectedFile) {
 				editor = editorManager->openEditors[i];
@@ -246,15 +248,14 @@ void PolycodeIDEApp::removeFile() {
 }
 
 void PolycodeIDEApp::newProject() {
-	frame->newProjectWindow->ResetForm();
 	frame->showModal(frame->newProjectWindow);
-	
+	frame->newProjectWindow->ResetForm();	
 }
 
 void PolycodeIDEApp::newFile() {
 	if(projectManager->getActiveProject()) {
-		frame->newFileWindow->resetForm();
 		frame->showModal(frame->newFileWindow);
+		frame->newFileWindow->resetForm();		
 	}
 }
 
@@ -356,6 +357,7 @@ void PolycodeIDEApp::openProject() {
 	exts.push_back("polyproject");
 	frame->showFileBrowser(CoreServices::getInstance()->getCore()->getUserHomeDirectory(),	false, exts, false);
 	frame->fileDialog->addEventListener(this, UIEvent::OK_EVENT);
+	frame->fileDialog->action = "openProject";
 #else
 	vector<CoreFileExtension> extensions;
 	CoreFileExtension ext;
@@ -371,16 +373,15 @@ void PolycodeIDEApp::openProject() {
 		PolycodeProject *project = projectManager->openProject(paths[0]);
 		if(project) {
 			projectManager->setActiveProject(project);
-			OSFileEntry projectEntry =	OSFileEntry(project->getProjectFile(), OSFileEntry::TYPE_FILE);
-			openFile(projectEntry);			
+			OSFileEntry projectEntry =	OSFileEntry(project->getProjectFile(), OSFileEntry::TYPE_FILE);	
 		}
 	}
 #endif
 }
 
 void PolycodeIDEApp::browseExamples() {
-	frame->newProjectWindow->ResetForm();
 	frame->showModal(frame->exampleBrowserWindow);
+	frame->newProjectWindow->ResetForm();	
 
 }
 
@@ -393,8 +394,8 @@ void PolycodeIDEApp::stopProject() {
 
 void PolycodeIDEApp::exportProject() {
 	if(projectManager->getActiveProject()) {
-		frame->exportProjectWindow->resetForm();
 		frame->showModal(frame->exportProjectWindow);		
+		frame->exportProjectWindow->resetForm();		
 	}	
 }
 
@@ -453,7 +454,13 @@ void PolycodeIDEApp::runProject() {
 }
 
 void PolycodeIDEApp::addFiles() {
-	if(projectManager->getActiveProject()) {	
+	if(projectManager->getActiveProject()) {
+#ifdef USE_POLYCODEUI_FILE_DIALOGS
+		std::vector<String> exts;
+		frame->showFileBrowser(CoreServices::getInstance()->getCore()->getUserHomeDirectory(),	false, exts, false);
+		frame->fileDialog->addEventListener(this, UIEvent::OK_EVENT);
+		frame->fileDialog->action = "addFiles";
+#else	
 		vector<CoreFileExtension> extensions;		
 		std::vector<String> files = core->openFilePicker(extensions, true);				
 		
@@ -462,8 +469,9 @@ void PolycodeIDEApp::addFiles() {
 			core->copyDiskItem(files[i], projectManager->activeFolder + "/" + entry.name);
 		}
 		
-		frame->getProjectBrowser()->refreshProject(projectManager->getActiveProject());		
-	}			
+		frame->getProjectBrowser()->refreshProject(projectManager->getActiveProject());
+#endif
+	}		
 }
 
 void PolycodeIDEApp::findText() {
@@ -556,7 +564,7 @@ void PolycodeIDEApp::openFile(OSFileEntry file) {
 		if(editor) {
 			editor->parentProject = projectManager->getActiveProject();
 			if(editor->openFile(file)) {
-				frame->addEditor(editor);					
+				frame->addEditor(editor);
 				frame->showEditor(editor);
 			} else {
 				delete editor;
@@ -577,13 +585,16 @@ void PolycodeIDEApp::handleEvent(Event *event) {
 		if(event->getEventCode() == UIEvent::OK_EVENT && event->getEventType() == "UIEvent") {
 			String path = frame->fileDialog->getSelection();
 			if(path != "") {
-				PolycodeProject *project = projectManager->openProject(path);
-				if(project) {
-					projectManager->setActiveProject(project);
-					OSFileEntry projectEntry =	OSFileEntry(project->getProjectFile(), OSFileEntry::TYPE_FILE);
-					openFile(projectEntry);			
+				if(frame->fileDialog->action == "openProject") {
+					PolycodeProject *project = projectManager->openProject(path);
+					if(project) {
+						projectManager->setActiveProject(project);
+					}
+				} else if(frame->fileDialog->action == "addFiles") {
+					OSFileEntry entry = OSFileEntry(path, OSFileEntry::TYPE_FILE);
+					core->copyDiskItem(path, projectManager->activeFolder + "/" + entry.name);
+					frame->getProjectBrowser()->refreshProject(projectManager->getActiveProject());
 				}
-				
 			}
 		}
 	}
@@ -625,6 +636,8 @@ void PolycodeIDEApp::handleEvent(Event *event) {
 			toggleConsole();
 		} else if(action == "settings") {
 			showSettings();
+		} else if(action == "find") {
+			findText();
 		}
 	}
 
@@ -650,7 +663,7 @@ void PolycodeIDEApp::handleEvent(Event *event) {
 				core->setFramerate(3);
 			break;		
 			case Core::EVENT_GAINED_FOCUS:
-				core->setFramerate(30);			
+				core->setFramerate(90);			
 			break;					
 			case Core::EVENT_CORE_RESIZE:
 				if(menuBar) {
@@ -928,9 +941,7 @@ void PolycodeIDEApp::handleEvent(Event *event) {
 			String fullPath = String(core->getDefaultWorkingDirectory()+"/"+frame->exampleBrowserWindow->getExamplePath());
 			PolycodeProject* project = projectManager->openProject(fullPath);
 			OSFileEntry projectEntry =	OSFileEntry(project->getProjectFile(), OSFileEntry::TYPE_FILE);
-			projectManager->setActiveProject(project);
-			openFile(projectEntry);			
-			
+			projectManager->setActiveProject(project);			
 			frame->hideModal();			
 		}
 	}
@@ -1012,7 +1023,6 @@ void PolycodeIDEApp::loadConfigFile() {
 					if(project) {
 						OSFileEntry projectEntry =	OSFileEntry(project->getProjectFile(), OSFileEntry::TYPE_FILE);
 						projectManager->setActiveProject(project);
-						openFile(projectEntry);
 					}
 				}
 			}
@@ -1053,6 +1063,8 @@ PolycodeIDEApp::~PolycodeIDEApp() {
 }
 
 bool PolycodeIDEApp::Update() {
+
+	bool retVal = core->Update();
 
 	if(willRunProject) {
 		willRunProject = false;
@@ -1100,6 +1112,7 @@ bool PolycodeIDEApp::Update() {
 	}
 
 
-	return core->updateAndRender();
+	core->Render();
+	return retVal;
 }
 

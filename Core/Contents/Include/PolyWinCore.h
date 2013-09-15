@@ -248,6 +248,8 @@ public:
 		std::vector<GamepadDeviceEntry*> gamepads;
 
 		HWND hWnd;
+		bool hasCopyDataString;
+		String copyDataString;
 
 	private:
 
@@ -272,6 +274,9 @@ public:
 		unsigned int PixelFormat;
 		PIXELFORMATDESCRIPTOR pfd;
 		
+		// frequency of the windows performance counter
+		double pcFreq;
+
 		// Tracks whether the system supports multitouch at runtime
 		bool hasMultiTouch;
 		

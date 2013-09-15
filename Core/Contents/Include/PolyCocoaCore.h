@@ -99,6 +99,17 @@ namespace Polycode {
 			CoreInput *input;		
 	};
 	
+	class VideoModeChangeInfo {
+		public:
+		int xRes;
+		int yRes;
+		bool fullScreen;
+		bool vSync;
+		int aaLevel;
+		int anisotropyLevel;
+		bool needResolutionChange;
+	};
+	
 	class _PolyExport CocoaCore : public Core {		
 	public:
 		
@@ -144,9 +155,7 @@ namespace Polycode {
 		void unlockMutex(CoreMutex *mutex);
 		CoreMutex *createMutex();		
 		
-		void checkEvents();
-		
-		vector<Rectangle> getVideoModes();
+		void checkEvents();		
 		
 		int lastMouseY;
 		int lastMouseX;				
@@ -160,9 +169,15 @@ namespace Polycode {
 		
 		bool checkSpecialKeyEvents(PolyKEY key);		
 				
+								
 	protected:	
+		
+		void _setVideoMode(int xRes, int yRes, bool fullScreen, bool vSync, int aaLevel, int anisotropyLevel);
+	
 		PolycodeView *glView;
-		uint64_t initTime;	
+		uint64_t initTime;
+		
+		VideoModeChangeInfo modeChangeInfo;
 		
 		IOHIDManagerRef hidManager;
 	};

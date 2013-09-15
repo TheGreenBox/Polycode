@@ -40,6 +40,8 @@ AssetEntry::AssetEntry(String assetPath, String assetName, String extension) : U
 	imageShape->setPositionMode(ScreenEntity::POSITION_TOPLEFT);
 	addChild(imageShape);
 	
+	extension = extension.toLowerCase();
+	
 	if(extension == "png") {
 		imageShape->loadTexture(assetPath);
 	} else if(extension == "ogg" || extension == "wav") {
@@ -78,6 +80,12 @@ AssetList::AssetList() : UIElement() {
 	bgShape->setPositionMode(ScreenEntity::POSITION_TOPLEFT);
 	bgShape->setColor(0.0, 0.0, 0.0, 0.4);
 	addChild(bgShape);
+	
+	reloadButton = new UIImageButton("Images/reload_icon.png");
+	reloadButton->addEventListener(this, UIEvent::CLICK_EVENT);
+	addChild(reloadButton);	
+	reloadButton->setPosition(10, 5);		
+	
 }
 
 AssetList::~AssetList() {
@@ -93,7 +101,7 @@ void AssetList::setExtensions(std::vector<String> extensions) {
 
 bool AssetList::hasExtension(String extension) {
 	for(int i=0; i < extensions.size(); i++) {
-		if(extensions[i] == extension) {
+		if(extensions[i] == extension.toLowerCase()) {
 			return true;
 		}
 	}
@@ -115,7 +123,7 @@ void AssetList::showFolder(String folderPath) {
 	vector<OSFileEntry> assets = OSBasics::parseFolder(folderPath, false);	
 	
 	Number xPos = 20;
-	Number yPos = 20;
+	Number yPos = 30;
 	
 	for(int i=0; i < assets.size(); i++) {
 		OSFileEntry entry = assets[i];
@@ -150,15 +158,19 @@ void AssetList::showFolder(String folderPath) {
 }
 
 void AssetList::handleEvent(Event *event) {
-	for(int i=0; i < assetEntries.size(); i++) {
-		if(event->getDispatcher() == assetEntries[i]->selectShape && event->getEventCode() == InputEvent::EVENT_MOUSEDOWN) {
-			assetEntries[i]->selectShape->visible = true;
-			selectedPath = assetEntries[i]->assetPath;
-			printf("%s\n", selectedPath.c_str());
-			if(currentEntry) {
-				currentEntry->selectShape->visible = false;
+	if(event->getDispatcher() == reloadButton && event->getEventCode() == UIEvent::CLICK_EVENT) {
+		showFolder(currentFolderPath);
+	} else {
+		for(int i=0; i < assetEntries.size(); i++) {
+			if(event->getDispatcher() == assetEntries[i]->selectShape && event->getEventCode() == InputEvent::EVENT_MOUSEDOWN) {
+				assetEntries[i]->selectShape->visible = true;
+				selectedPath = assetEntries[i]->assetPath;
+				printf("%s\n", selectedPath.c_str());
+				if(currentEntry) {
+					currentEntry->selectShape->visible = false;
+				}
+				currentEntry = assetEntries[i];
 			}
-			currentEntry = assetEntries[i];
 		}
 	}
 }
@@ -206,10 +218,6 @@ AssetBrowser::AssetBrowser() : UIWindow(L"Asset Browser", 850, 500) {
 }
 
 void AssetBrowser::setProject(PolycodeProject *project) {
-
-	if(project == currentProject) {
-		return;
-	}
 	
 	templateContainer->getRootNode()->clearTree();
 

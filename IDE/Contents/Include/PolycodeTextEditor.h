@@ -53,6 +53,7 @@ class FindBar : public UIElement {
 		UIImageButton *closeButton;		
 		
 		UIButton *replaceAllButton;
+		UIComboBox *functionList;
 		
 	protected:
 		ScreenShape *barBg;
@@ -67,9 +68,9 @@ class PolycodeSyntaxHighlighter : public UITextInputSyntaxHighlighter {
 		bool contains(String part, std::vector<String> *list);
 		bool contains_char(char part, std::vector<char> *list);
 			
-		std::vector<SyntaxHighlightToken> parseText(String text);		
-		std::vector<SyntaxHighlightToken> parseLua(String text);	
-		std::vector<SyntaxHighlightToken> parseGLSL(String text);
+		std::vector<SyntaxHighlightToken> parseText(String text, SyntaxHighlightToken overrideToken);
+		std::vector<SyntaxHighlightToken> parseLua(String text, SyntaxHighlightToken overrideToken);	
+		std::vector<SyntaxHighlightToken> parseGLSL(String text, SyntaxHighlightToken overrideToken);
 			
 		static const int MODE_LUA = 0;
 		static const int MODE_GLSL = 1;
@@ -103,6 +104,7 @@ protected:
 	FindBar *findBar;
 	bool isLoading;
 	String lastFindString;
+	bool firstTimeResize;
 
 	PolycodeSyntaxHighlighter *syntaxHighligher;
 	UITextInput *textInput;

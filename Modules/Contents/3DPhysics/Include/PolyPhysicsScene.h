@@ -72,7 +72,7 @@ namespace Polycode {
 
 	class _PolyExport PhysicsHingeConstraint  {
 		public:
-		
+			~PhysicsHingeConstraint();
 			void setLimits(Number minLimit, Number maxLimit);
 			Number getAngle();
 			
@@ -123,6 +123,8 @@ namespace Polycode {
 				
 		void warpEntity(SceneEntity *entity, Vector3 position, bool resetRotation = false);
 		
+		void removeConstraint(PhysicsHingeConstraint *constraint);
+		
 		void applyImpulse(SceneEntity *entity, Vector3 force, Vector3 point);
 		
 		PhysicsVehicle *addVehicleChild(SceneEntity *newEntity, Number mass, Number friction, int group  = 1);
@@ -133,9 +135,11 @@ namespace Polycode {
 			//@}
 			// ----------------------------------------------------------------------------------------------------------------
 
+		bool pausePhysics;
 		
 	protected:
 		
+		bool paused;
 		int maxSubSteps;
 		void initPhysicsScene(Vector3 size);		
 		

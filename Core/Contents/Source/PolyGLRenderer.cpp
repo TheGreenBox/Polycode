@@ -24,6 +24,7 @@
 #include "PolyString.h"
 #include "PolyLogger.h"
 #include "PolyTexture.h"
+#include "PolyVector2.h"
 #include "PolyGLTexture.h"
 #include "PolyCubemap.h"
 #include "PolyGLCubemap.h"
@@ -166,9 +167,8 @@ void OpenGLRenderer::Resize(int xRes, int yRes) {
 	
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-	gluPerspective(fov,(GLfloat)xRes/(GLfloat)yRes,nearPlane,farPlane);
-	glViewport(0, 0, xRes, yRes);
-	setScissorBox(Rectangle(0, 0, xRes, yRes));
+
+	resetViewport();
 	
 	glMatrixMode(GL_MODELVIEW);
 	glLineWidth(1);
@@ -221,11 +221,16 @@ void OpenGLRenderer::setLineSmooth(bool val) {
 void OpenGLRenderer::resetViewport() {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(fov,(GLfloat)viewportWidth/(GLfloat)viewportHeight,nearPlane,farPlane);	
+	//gluPerspective(fov,(GLfloat)viewportWidth/(GLfloat)viewportHeight,nearPlane,farPlane);		
+    Number fW, fH;
+    fH = tan( fov / 360.0 * PI ) * nearPlane;
+    fW = fH * ((GLfloat)viewportWidth/(GLfloat)viewportHeight);
+	glFrustum(-fW + (viewportShift.x*fW*2.0), fW + (viewportShift.x*fW*2.0), -fH + (viewportShift.y*fH*2.0), fH + (viewportShift.y*fH*2.0), nearPlane, farPlane);
+	
 	glViewport(0, 0, viewportWidth, viewportHeight);
-	glScissor(0, 0, viewportWidth, viewportHeight);
+	glScissor(0, 0,  viewportWidth, viewportHeight);
 	glMatrixMode(GL_MODELVIEW);	
-
+	glGetDoublev( GL_PROJECTION_MATRIX, sceneProjectionMatrix);
 }
 
 Vector3 OpenGLRenderer::Unproject(Number x, Number y) {
@@ -254,7 +259,7 @@ Vector3 OpenGLRenderer::Unproject(Number x, Number y) {
 	
 }
 
-Vector3 OpenGLRenderer::projectRayFrom2DCoordinate(Number x, Number y) {
+Vector3 OpenGLRenderer::projectRayFrom2DCoordinate(Number x, Number y, Matrix4 cameraMatrix, Matrix4 projectionMatrix) {
 	GLdouble nearPlane[3],farPlane[3];
 	
 	GLdouble mv[16];
@@ -270,8 +275,13 @@ Vector3 OpenGLRenderer::projectRayFrom2DCoordinate(Number x, Number y) {
 	GLint vp[4];
 	glGetIntegerv( GL_VIEWPORT, vp );
 	
-	gluUnProject(x, yRes - y, 0.0, mv, sceneProjectionMatrix, vp,  &nearPlane[0], &nearPlane[1], &nearPlane[2]);
-	gluUnProject(x, yRes - y, 1.0, mv, sceneProjectionMatrix, vp,  &farPlane[0], &farPlane[1], &farPlane[2]);
+	GLdouble _sceneProjectionMatrix[16];
+	for(int i=0; i < 16; i++) {
+		_sceneProjectionMatrix[i] = projectionMatrix.ml[i];
+	}	
+	
+	gluUnProject(x, yRes - y, 0.0, mv, _sceneProjectionMatrix, vp,  &nearPlane[0], &nearPlane[1], &nearPlane[2]);
+	gluUnProject(x, yRes - y, 1.0, mv, _sceneProjectionMatrix, vp,  &farPlane[0], &farPlane[1], &farPlane[2]);
 	
 	Vector3 nearVec(nearPlane[0], nearPlane[1], nearPlane[2]);
 	Vector3 farVec(farPlane[0], farPlane[1], farPlane[2]);
