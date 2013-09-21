@@ -53,8 +53,6 @@ namespace Polycode {
 			* Assigned bone.
 			*/			
 			Bone *bone;
-            
-			BoneAssignment* Clone()const;
 	};
 
 	/**
@@ -115,7 +113,7 @@ namespace Polycode {
             /**
             * @return copy of vertex
             */
-            Vertex* Clone();
+            Vertex* Clone()const;
             
 			/**
 			* Assign a bone to the vertex by bone id.
@@ -128,7 +126,7 @@ namespace Polycode {
 			* Get total number of bone assignments.
 			* @return Number of bone assignments.
 			*/
-			int getNumBoneAssignments();
+			int getNumBoneAssignments()const;
 			
 			/**
 			* Get bone assignment at index.

@@ -48,10 +48,11 @@ Polygon* Polygon::Clone()const {
     clone->normal = normal;
     clone->tangent = tangent;            
     
-    for( std::vector<Vertex*>::iterator it = vertices.begin();
+    for( std::vector<Vertex*>::const_iterator it = vertices.begin();
             it != vertices.end(); ++it ) {
         clone->addVertex((*it)->Clone());
     }
+    return clone;
 }
     
 void Polygon::flipUVY() {
@@ -61,7 +62,7 @@ void Polygon::flipUVY() {
     }
 }
 
-unsigned int Polygon::getVertexCount() {
+unsigned int Polygon::getVertexCount()const {
     return vertices.size();
 }
 
@@ -179,3 +180,4 @@ Vertex *Polygon::addVertex(Number x, Number y, Number z, Number u, Number v) {
     return vertex;
 }
 
+} //namespace Polycode

@@ -60,7 +60,7 @@ namespace Polycode {
             *   on even if its editorOnly flag is set to true.
             * @return The clone of the entity.
             */
-            virtual SceneEntity *Clone(bool deepClone, bool ignoreEditorOnly)const {}
+            virtual SceneEntity *Clone()const { return new SceneEntity; }
 
         protected:
 

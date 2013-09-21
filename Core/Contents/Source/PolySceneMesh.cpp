@@ -20,6 +20,8 @@
  THE SOFTWARE.
 */
 
+#include <iostream>
+
 #include "PolySceneMesh.h"
 #include "PolyCoreServices.h"
 #include "PolyBone.h"
@@ -303,18 +305,20 @@ void SceneMesh::Render() {
     }   
 }
 
-SceneMesh *Clone(bool deepClone, bool ignoreEditorOnly) const {
-    //SceneMesh* clone = new SceneMesh(mesh->getMeshType());
-    applyClone(clone);
-    return clone;
-}
-
-void applyClone(SceneMesh *clone, bool deepClone, bool ignoreEditorOnly) const {
+SceneMesh* SceneMesh::Clone() const {
+    std::cout << "There is SceneMesh::Clone indeed\n";
+    Mesh* mcl = mesh->Clone();
+    std::cout << "Clone mesh complete\n";
+    mcl->getRadius();
+    std::cout << "\tgetRadius() complete";
+    mcl->calculateBBox();
+    std::cout << "\tcalculateBBox() complete";
+    SceneMesh* clone = new SceneMesh(mcl);
     clone->useVertexBuffer = useVertexBuffer;
-    clone->mesh = mesh->Clone();
-    Texture *texture;
-    Material *material;
-    Skeleton *skeleton;
-    ShaderBinding *localShaderOptions;
+//  Texture *texture;
+//  Material *material;
+//  Skeleton *skeleton;
+//  ShaderBinding *localShaderOptions;
+    return clone;
 }
 

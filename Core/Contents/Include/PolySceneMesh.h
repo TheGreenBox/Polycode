@@ -171,12 +171,7 @@ namespace Polycode {
  			* @param ignoreEditorOnly If true, ignore all child entities where editorOnly is set to true (will still clone the entity you call Clone() on even if its editorOnly flag is set to true.
  			* @return The clone of the entity.
  			*/
-			SceneMesh *Clone(bool deepClone, bool ignoreEditorOnly)const;
-
-			/**
- 			* This method must be implemented by all subvlasses implementing Clone.
- 			*/
-			void applyClone(SceneMesh *clone, bool deepClone, bool ignoreEditorOnly)const;
+			SceneMesh *Clone()const;
 
 		protected:
 		

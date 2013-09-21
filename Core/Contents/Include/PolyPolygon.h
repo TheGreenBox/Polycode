@@ -51,7 +51,7 @@ namespace Polycode {
 			* Returns the number of vertices in the polygon.
 			* @return Number of vertices in the polygon.
 			*/ 
-			unsigned int getVertexCount();
+			unsigned int getVertexCount()const;
 			
 			/**
 			* Returns the vertex at specified index.

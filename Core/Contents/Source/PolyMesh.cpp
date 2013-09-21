@@ -19,6 +19,7 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
 */
+#include <iostream>	
 
 #include "PolyMesh.h"
 #include "PolyLogger.h"
@@ -98,7 +99,11 @@ namespace Polycode {
 		Number hRad = 0;
 		Number len;
 		for(int i=0; i < polygons.size(); i++) {	
+            std::cout << "i: " << i << '\n';
 			for(int j=0; j < polygons[i]->getVertexCount(); j++) {
+                std::cout << "j: " 
+				<< reinterpret_cast<unsigned long long int>(polygons[i]->getVertex(j))
+                << ' ' << j << '\n';
 				len = polygons[i]->getVertex(j)->length();
 				if(len > hRad)
 					hRad = len;
@@ -138,6 +143,7 @@ namespace Polycode {
 				tex.y = polygons[i]->getVertex(j)->getTexCoord().y;
 				
 				OSBasics::write(&pos, sizeof(Vector3_struct), 1, outFile);
+
 				OSBasics::write(&nor, sizeof(Vector3_struct), 1, outFile);
 				OSBasics::write(&col, sizeof(Vector4_struct), 1, outFile);				
 				OSBasics::write(&tex, sizeof(Vector2_struct), 1, outFile);								
@@ -258,15 +264,17 @@ namespace Polycode {
 		arrayDirtyMap[RenderDataArray::NORMAL_DATA_ARRAY] = true;										
 		arrayDirtyMap[RenderDataArray::TANGENT_DATA_ARRAY] = true;		
 	}
-	
+
     Mesh* Mesh::Clone()const {
-        Mesh* clone = new Mesh(meshType);
+        Mesh* cl = new Mesh(meshType);
 		unsigned int numFaces = polygons.size();
-        for( std::vector<Polygon*>::iterator pit = polygons.begin();
+        for( std::vector<Polygon*>::const_iterator pit = polygons.begin();
                 pit != polygons.end(); ++pit ) {
-            addPolygon((*pit)->Clone());
+            std::cout << reinterpret_cast<unsigned long long int>(*pit) << '\n';
+            cl->addPolygon((*pit)->Clone());
         }
-        return clone;
+        std::cout << "Polygon copy cycle\n";
+        return cl;
     }
     
 	void Mesh::createVPlane(Number w, Number h) { 

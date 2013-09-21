@@ -24,14 +24,14 @@
 
 using namespace Polycode;
 
-BoneAssignment* BoneAssignment::Clone()const {
-    BoneAssignment* clone = new BoneAssignment;
-    clone->boneID = boneID;
-    clone->weight = weight;
-    if ( bone != NULL ) {
-        clone->bone = bone->Clone();
-    }
-}
+//BoneAssignment* BoneAssignment::Clone()const {
+//    BoneAssignment* clone = new BoneAssignment;
+//    clone->boneID = boneID;
+//    clone->weight = weight;
+//    if ( bone != NULL ) {
+//        clone->bone = bone->Clone();
+//    }
+//}
 
 Vertex::Vertex() : Vector3(0,0,0) {
     texCoord = Vector2(0,0);    
@@ -66,18 +66,18 @@ Vertex::Vertex(Number x, Number y, Number z, Number u, Number v) : Vector3(x,y,z
 
 Vertex* Vertex::Clone()const {
     Vertex* v = new Vertex(this->x, this->y, this->z);
-    v.restNormal     = restNormal;
-    v.restPosition   = restPosition;
-    v.normal         = normal;
-    v.tangent        = tangent;
-    v.vertexColor    = vertexColor;
-    v.texCoord       = texCoord;
-    v.useVertexColor = useVertexColor;
+    v->restNormal     = restNormal;
+    v->restPosition   = restPosition;
+    v->normal         = normal;
+    v->tangent        = tangent;
+    v->vertexColor    = vertexColor;
+    v->texCoord       = texCoord;
+    v->useVertexColor = useVertexColor;
     int boneN = getNumBoneAssignments();
     
     for( int index = 0; index < boneN; ++index ) {
-	    v.addBoneAssignment( getBoneAssignment(index)->boneID, 
-                             getBoneAssignment(index)->boneWeight );
+	    v->addBoneAssignment( boneAssignments[index]->boneID, 
+                              boneAssignments[index]->weight );
     }
     return v;
 }
@@ -115,7 +115,7 @@ void Vertex::normalizeWeights() {
     }   
 }
 
-int Vertex::getNumBoneAssignments() {
+int Vertex::getNumBoneAssignments()const {
     return boneAssignments.size();
 }
 
