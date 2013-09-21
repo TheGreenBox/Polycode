@@ -306,16 +306,10 @@ void SceneMesh::Render() {
 }
 
 SceneMesh* SceneMesh::Clone() const {
-    std::cout << "There is SceneMesh::Clone indeed\n";
-    Mesh* mcl = mesh->Clone();
-    std::cout << "Clone mesh complete\n";
-    mcl->getRadius();
-    std::cout << "\tgetRadius() complete";
-    mcl->calculateBBox();
-    std::cout << "\tcalculateBBox() complete";
-    SceneMesh* clone = new SceneMesh(mcl);
+    SceneMesh* clone = new SceneMesh(mesh->Clone());
     clone->useVertexBuffer = useVertexBuffer;
-//  Texture *texture;
+    //clone->texture = texture->Clone();
+    clone->texture = texture;
 //  Material *material;
 //  Skeleton *skeleton;
 //  ShaderBinding *localShaderOptions;
