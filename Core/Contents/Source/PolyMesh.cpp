@@ -259,6 +259,16 @@ namespace Polycode {
 		arrayDirtyMap[RenderDataArray::TANGENT_DATA_ARRAY] = true;		
 	}
 	
+    Mesh* Mesh::Clone()const {
+        Mesh* clone = new Mesh(meshType);
+		unsigned int numFaces = polygons.size();
+        for( std::vector<Polygon*>::iterator pit = polygons.begin();
+                pit != polygons.end(); ++pit ) {
+            addPolygon((*pit)->Clone());
+        }
+        return clone;
+    }
+    
 	void Mesh::createVPlane(Number w, Number h) { 
 		Polygon *imagePolygon = new Polygon();
 		
@@ -564,7 +574,7 @@ namespace Polycode {
 				polygon = new Polygon();	
 				polygon->addVertex(lastx,0,lastz, 0.5+(lastz/radius*0.5), 0.5+(lastx/radius*0.5));						
 				polygon->addVertex(0,0,0,0.5,0.5);																																					
-				polygon->addVertex(x,0,z, 0.5+(z/radius*0.5), 0.5+(x/radius*0.5));								
+    				polygon->addVertex(x,0,z, 0.5+(z/radius*0.5), 0.5+(x/radius*0.5));								
 				addPolygon(polygon);			
 				}
 								

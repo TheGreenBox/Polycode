@@ -53,6 +53,8 @@ namespace Polycode {
 			* Assigned bone.
 			*/			
 			Bone *bone;
+            
+			BoneAssignment* Clone()const;
 	};
 
 	/**
@@ -110,6 +112,11 @@ namespace Polycode {
 			
 			virtual ~Vertex();
 			
+            /**
+            * @return copy of vertex
+            */
+            Vertex* Clone();
+            
 			/**
 			* Assign a bone to the vertex by bone id.
 			* @param boneID The bone id.

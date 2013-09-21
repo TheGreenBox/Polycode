@@ -26,31 +26,43 @@ THE SOFTWARE.
 
 namespace Polycode {
 
-	/**
-	* 3D base entity. SceneEntities are the base class for all 3D entities in Polycode. A thin wrapper around Entity, it inherits most of its functionality.
-	@see Entity
-	*/
-	class _PolyExport SceneEntity : public Entity {
-		public:
-			SceneEntity();
-			virtual ~SceneEntity();
-		
-			/**
-			* Test mouse collision on the scene entity at a specified screen point. Each SceneEntity subclass must implement this if it wants to support this feature.
-			* @param x X position on screen.
-			* @param y Y position on screen.			
-			* @return True if the entity is at the specified screen coordinate.
-			*/
-			virtual bool testMouseCollision(Number x, Number y) { return false;}
-			
-			/**
-			* If set to true, will cast shadows (Defaults to true).
-			*/
-			bool castShadows;
-			
-			int collisionShapeType;	
-			
-		protected:
+    /**
+    * 3D base entity. SceneEntities are the base class for all 3D entities in Polycode. A thin wrapper around Entity, it inherits most of its functionality.
+    @see Entity
+    */
+    class _PolyExport SceneEntity : public Entity {
+        public:
+            SceneEntity();
+            virtual ~SceneEntity();
+        
+            /**
+            * Test mouse collision on the scene entity at a specified screen point. Each SceneEntity subclass must implement this if it wants to support this feature.
+            * @param x X position on screen.
+            * @param y Y position on screen.            
+            * @return True if the entity is at the specified screen coordinate.
+            */
+            virtual bool testMouseCollision(Number x, Number y) { return false;}
+            
+            /**
+            * If set to true, will cast shadows (Defaults to true).
+            */
+            bool castShadows;
+            
+            int collisionShapeType; 
+            
+            /**
+            * Clones the entity, return an exact copy. 
+            *   This method must be implemented in an Entity subclass 
+            *   for you to be able to clone it.
+            * @param deepClone If true, perform a deep clone, cloning all the children.
+            * @param ignoreEditorOnly If true, ignore all child entities where editorOnly 
+            *   is set to true (will still clone the entity you call Clone() 
+            *   on even if its editorOnly flag is set to true.
+            * @return The clone of the entity.
+            */
+            virtual SceneEntity *Clone(bool deepClone, bool ignoreEditorOnly)const {}
 
-	};
+        protected:
+
+    };
 }

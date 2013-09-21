@@ -165,6 +165,19 @@ namespace Polycode {
 			*/ 			
 			bool ownsSkeleton;
 		
+			/**
+ 			* Clones the entity, return an exact copy. This method must be implemented in an Entity subclass for you to be able to clone it.
+ 			* @param deepClone If true, perform a deep clone, cloning all the children.
+ 			* @param ignoreEditorOnly If true, ignore all child entities where editorOnly is set to true (will still clone the entity you call Clone() on even if its editorOnly flag is set to true.
+ 			* @return The clone of the entity.
+ 			*/
+			SceneMesh *Clone(bool deepClone, bool ignoreEditorOnly)const;
+
+			/**
+ 			* This method must be implemented by all subvlasses implementing Clone.
+ 			*/
+			void applyClone(SceneMesh *clone, bool deepClone, bool ignoreEditorOnly)const;
+
 		protected:
 		
 			bool useVertexBuffer;

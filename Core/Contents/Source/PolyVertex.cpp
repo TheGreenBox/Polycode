@@ -24,88 +24,115 @@
 
 using namespace Polycode;
 
+BoneAssignment* BoneAssignment::Clone()const {
+    BoneAssignment* clone = new BoneAssignment;
+    clone->boneID = boneID;
+    clone->weight = weight;
+    if ( bone != NULL ) {
+        clone->bone = bone->Clone();
+    }
+}
+
 Vertex::Vertex() : Vector3(0,0,0) {
-	texCoord = Vector2(0,0);	
-	normal = Vector3(0,0,0);
-	useVertexColor = false;
+    texCoord = Vector2(0,0);    
+    normal = Vector3(0,0,0);
+    useVertexColor = false;
 }
 
 Vertex::Vertex(Number pos_x, Number pos_y, Number pos_z, Number nor_x, Number nor_y, Number nor_z) : Vector3(pos_x, pos_y, pos_z) {
-	normal = Vector3(nor_x, nor_y, nor_z);
-	texCoord = Vector2(0,0);
-	useVertexColor = false;
-	restPosition.set(pos_x, pos_y, pos_z);
+    normal = Vector3(nor_x, nor_y, nor_z);
+    texCoord = Vector2(0,0);
+    useVertexColor = false;
+    restPosition.set(pos_x, pos_y, pos_z);
 }
 
 Vertex::Vertex(Number pos_x, Number pos_y, Number pos_z, Number nor_x, Number nor_y, Number nor_z, Number u, Number v): Vector3(pos_x, pos_y, pos_z) {
-	normal = Vector3(nor_x, nor_y, nor_z);
-	texCoord = Vector2(u,v);
-	useVertexColor = false;
-	restPosition.set(pos_x, pos_y, pos_z);	
+    normal = Vector3(nor_x, nor_y, nor_z);
+    texCoord = Vector2(u,v);
+    useVertexColor = false;
+    restPosition.set(pos_x, pos_y, pos_z);  
 }
 
 Vertex::Vertex(Number x, Number y, Number z) : Vector3(x,y,z) {
-	useVertexColor = false;
-	restPosition.set(x, y, z);
+    useVertexColor = false;
+    restPosition.set(x, y, z);
 }
 
 Vertex::Vertex(Number x, Number y, Number z, Number u, Number v) : Vector3(x,y,z) {
-	texCoord = Vector2(u,v);	
-	useVertexColor = false;
-	restPosition.set(x, y, z);
+    texCoord = Vector2(u,v);    
+    useVertexColor = false;
+    restPosition.set(x, y, z);
+}
+
+Vertex* Vertex::Clone()const {
+    Vertex* v = new Vertex(this->x, this->y, this->z);
+    v.restNormal     = restNormal;
+    v.restPosition   = restPosition;
+    v.normal         = normal;
+    v.tangent        = tangent;
+    v.vertexColor    = vertexColor;
+    v.texCoord       = texCoord;
+    v.useVertexColor = useVertexColor;
+    int boneN = getNumBoneAssignments();
+    
+    for( int index = 0; index < boneN; ++index ) {
+	    v.addBoneAssignment( getBoneAssignment(index)->boneID, 
+                             getBoneAssignment(index)->boneWeight );
+    }
+    return v;
 }
 
 void Vertex::addBoneAssignment(unsigned int boneID, Number boneWeight) {
-	BoneAssignment *newBas = new BoneAssignment();
-	newBas->boneID = boneID;
-	if(boneWeight > 1)
-		boneWeight = 1;
-	if(boneWeight < 0)
-		boneWeight = 0;
-		
-	newBas->weight = boneWeight;
-	boneAssignments.push_back(newBas);
+    BoneAssignment *newBas = new BoneAssignment();
+    newBas->boneID = boneID;
+    if(boneWeight > 1)
+        boneWeight = 1;
+    if(boneWeight < 0)
+        boneWeight = 0;
+        
+    newBas->weight = boneWeight;
+    boneAssignments.push_back(newBas);
 }
 
 void Vertex::setNormal(Number x, Number y, Number z) {
-	normal.x = x;
-	normal.y = y;
-	normal.z = z;	
+    normal.x = x;
+    normal.y = y;
+    normal.z = z;   
 }
 
 void Vertex::normalizeWeights() {
-	Number allWeights = 0;
-//	if(boneAssignments.size() == 1)
-//		if(boneAssignments[0]->weight < 1)
-//			return;
-			
-	for(int i =0 ;i < boneAssignments.size(); i++) {
-		allWeights += boneAssignments[i]->weight;
-	}
-	
-	for(int i =0 ;i < boneAssignments.size(); i++) {
-		boneAssignments[i]->weight *= 1.0f/allWeights;
-	}	
+    Number allWeights = 0;
+//  if(boneAssignments.size() == 1)
+//      if(boneAssignments[0]->weight < 1)
+//          return;
+            
+    for(int i =0 ;i < boneAssignments.size(); i++) {
+        allWeights += boneAssignments[i]->weight;
+    }
+    
+    for(int i =0 ;i < boneAssignments.size(); i++) {
+        boneAssignments[i]->weight *= 1.0f/allWeights;
+    }   
 }
 
 int Vertex::getNumBoneAssignments() {
-	return boneAssignments.size();
+    return boneAssignments.size();
 }
 
 BoneAssignment *Vertex::getBoneAssignment(unsigned int index) {
-	return boneAssignments[index];
+    return boneAssignments[index];
 }
 
 Vertex::~Vertex() {
-//	delete normal;
-//	delete texCoord;
+//  delete normal;
+//  delete texCoord;
 }
 
 Vector2 Vertex::getTexCoord() {
-	return texCoord;
+    return texCoord;
 }
 
 void Vertex::setTexCoord(Number u, Number v) {
-	texCoord.x = u;
-	texCoord.y = v;
+    texCoord.x = u;
+    texCoord.y = v;
 }

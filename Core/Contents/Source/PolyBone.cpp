@@ -153,3 +153,9 @@ void Bone::Render() {
 	renderer->drawArrays(boneMesh->getMeshType());	
 
 }
+
+Bone* Bone::Clone()const {
+    Bone* clone = new Bone(boneName);
+    return clone;
+}
+

@@ -41,6 +41,11 @@ namespace Polycode {
 			*/
 			Polygon();
 			virtual ~Polygon();
+
+            /**
+            * @return
+            */
+			Polygon* Clone()const;
 			
 			/**
 			* Returns the number of vertices in the polygon.
